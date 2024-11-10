@@ -15,7 +15,7 @@ parameters["n_rovers"] = 8  # Number of rover agents on map
 parameters["n_poi"] = 10   # Number of POIs on map
 parameters["steps"] = 25  # Number of time steps rovers take each episode
 parameters["world_setup"] = "All"  # Rover_Only, All
-parameters["poi_config_type"] = "Two_POI_LR"  # Random, Two_POI_LR, Twp_POI_TB, Four_Corners, Circle
+parameters["poi_config_type"] = "Random"  # Random, Two_POI_LR, Twp_POI_TB, Four_Corners, Circle
 parameters["rover_config_type"] = "Concentrated"  # Random, Concentrated, Fixed
 
 # Rover Parameters
