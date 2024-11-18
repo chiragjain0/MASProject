@@ -426,6 +426,6 @@ class RoverDomainVel:
 		fig, ax = plt.subplots()
 		im = ax.imshow(matrix, cmap='Accent', origin='upper')
 		if save:
-			plt.savefig(fname=fname, dpi=300, quality=90, format='png')
+			plt.savefig(fname=fname, dpi=300, format='png')
 		else:
 			plt.show()

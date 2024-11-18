@@ -38,8 +38,8 @@ while not done:
     joint_action = np.random.uniform(-1, 1, (args.num_agents, 2))  # Random 
     next_state, local_rewards, done, global_reward = rover_env.step(joint_action)
 rover_env.render()       # Prints environment state in console
-rover_env.viz(save=True, fname='rover_path.png')  # Saves visualization as PNG
-
+# rover_env.viz(save=False, fname='F')  # Saves visualization as PNG
+rover_env.viz(save=False)  # Saves visualization as PNG
 
 
 

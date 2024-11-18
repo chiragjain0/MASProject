@@ -11,9 +11,9 @@ parameters["n_configurations"] = 1  # The number of environmental configurations
 # Domain parameters
 parameters["x_dim"] = 100.0  # Width of the rover map
 parameters["y_dim"] = 100.0  # Height of the rover map
-parameters["n_rovers"] = 8  # Number of rover agents on map
-parameters["n_poi"] = 10   # Number of POIs on map
-parameters["steps"] = 25  # Number of time steps rovers take each episode
+parameters["n_rovers"] = 1  # Number of rover agents on map
+parameters["n_poi"] = 2   # Number of POIs on map
+parameters["steps"] = 1000  # Number of time steps rovers take each episode
 parameters["world_setup"] = "All"  # Rover_Only, All
 parameters["poi_config_type"] = "Random"  # Random, Two_POI_LR, Twp_POI_TB, Four_Corners, Circle
 parameters["rover_config_type"] = "Concentrated"  # Random, Concentrated, Fixed
@@ -23,6 +23,12 @@ parameters["sensor_model"] = "summed"  # Should either be "density" or "summed"
 parameters["angle_res"] = 360 / 4  # Resolution of sensors (determines number of sectors)
 parameters["observation_radius"] = 3.0  # Maximum range at which rovers can observe a POI
 parameters["dmax"] = 1.5  # Maximum distance a rover can move in a single time step
+
+# Q-Learning Parameters
+parameters["epsilon_q"] = 0.1
+parameters["epsilon_decay_factor"] = 0.95
+parameters["learning_rate"] = 0.1
+parameters["discount_factor"] = 0.95
 
 # Neural network parameters for rover motor control
 parameters["n_inp"] = int(2 * (360/parameters["angle_res"]))

@@ -1,5 +1,6 @@
 import numpy as np
 import sys
+import copy
 from parameters import parameters as p
 from global_functions import get_squared_dist, get_angle
 
@@ -16,10 +17,19 @@ class Rover:
         self.sensor_range = None  # Distance rovers can perceive environment (default is infinite)
         self.sensor_res = p["angle_res"]  # Angular resolution of the sensors
         self.n_inputs = p["n_inp"]  # Number of inputs for rover's neural network
-
+        self.n_brackets = int(360.0 / p["angle_res"])
         # Rover Data -----------------------------------------------------------------------------------------
         self.observations = np.zeros(p["n_inp"])  # Number of sensor inputs for Neural Network
+        self.prev_observations = copy.deepcopy(self.observations)
         self.rover_actions = np.zeros(p["n_out"])  # Motor actions from neural network outputs
+
+        # Q-learning -----------------------------------------------------------------------------------------
+        self.Qtable = {}
+        self.reward = 0.0
+        self.action_quad = 0
+        self.action_space = [[1.0, 1.0], [-1.0, 1.0], [-1.0, -1.0], [1.0, -1.0]]
+        self.lr = p["learning_rate"]
+        self.dscf = p["discount_factor"]
 
     def reset_rover(self, rover_config):
         """
@@ -29,7 +39,7 @@ class Rover:
         self.loc[1] = rover_config[1]
         self.loc[2] = rover_config[2]
         self.observations = np.zeros(self.n_inputs)
-
+        self.prev_observations = self.observations.copy()
     def scan_environment(self, rovers, pois):
         """
         Constructs the state information that gets passed to the rover's neuro-controller
@@ -37,7 +47,7 @@ class Rover:
         n_brackets = int(360.0 / self.sensor_res)
         poi_state = self.poi_scan(pois, n_brackets)
         rover_state = self.rover_scan(rovers, n_brackets)
-
+        
         for i in range(n_brackets):
             self.observations[i] = poi_state[i]
             self.observations[n_brackets + i] = rover_state[i]
@@ -97,7 +107,7 @@ class Rover:
                 temp_rover_dist_list[bracket].append(1/dist)
 
         # Encode Rover information into the state vector
-        for bracket in range(n_brackets):
+        for bracket in range(n_brackets): 
             if len(temp_rover_dist_list[bracket]) > 0:
                 if self.sensor_type == 'density':
                     rover_state[bracket] = sum(temp_rover_dist_list[bracket]) / len(temp_rover_dist_list[bracket])  # Density Sensor
@@ -109,3 +119,17 @@ class Rover:
                 rover_state[bracket] = -1.0
 
         return rover_state
+    
+    def update_Qvalues(self):
+        current_q = self.get_Qvalue(self.prev_observations.tolist(), self.action_quad)
+        next_Qvalues = [self.get_Qvalue(self.observations.tolist(), next_action) for next_action in range(self.n_brackets)]
+        best_next_q = np.max(next_Qvalues)
+        td_error = self.reward + self.dscf * (best_next_q - current_q)
+        new_q_val = current_q + self.lr * td_error
+        self.set_Qvalue(self.prev_observations.tolist(), self.action_quad, new_q_val)
+
+    def set_Qvalue(self, obs, action, qvalue):
+        self.Qtable[(tuple(obs), action)] = qvalue
+        
+    def get_Qvalue(self, obs, action):
+        return self.Qtable.get((tuple(obs), action), 0.0)

@@ -15,11 +15,10 @@ class RoverDomain:
         self.n_rovers = p["n_rovers"]
         self.obs_radius = p["observation_radius"]  # Maximum distance rovers can make observations of POI at
         self.rover_poi_distances = [[] for i in range(self.n_pois)]  # Tracks rover distances to POI at each time step
-
+        self.global_rewards = []
         # Rover Instances
         self.rovers = {}  # Dictionary containing instances of rover objects
         self.rover_configurations = [[] for _ in range(p["n_rovers"])]
-
         # POI Instances
         self.pois = {}  # Dictionary containing instances of PoI objects
         self.poi_configurations = [[] for _ in range(p["n_poi"])]
