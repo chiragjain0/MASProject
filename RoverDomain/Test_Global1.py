@@ -12,37 +12,52 @@ def rover_global():
     # World Setup
     rd = RoverDomain()
     rd.load_world()
-    
-    # Q-learning
-    # Take the step
-    # Get observations(s') and rewards r
-    # Update Q values for each agent according to action each took.
-    # decay epsilon
-    epsilon = p["epsilon_q"]
-    decay = p["epsilon_decay_factor"]
-    poi_rewards = np.zeros((p["n_poi"], p["steps"]))
-    for step in range(p["steps"]):
-        rover_actions = []
-        for rv in rd.rovers:
-            direction, angle = e_greedy(epsilon, rd.rovers[rv])
-            action_bracket = int(angle / rd.rovers[rv].sensor_res)
-            if action_bracket > rd.rovers[rv].n_brackets - 1:
-                    action_bracket -= n_brackets
-            rd.rovers[rv].action_quad = action_bracket
-            rover_actions.append(direction)
-            
-        step_rewards = rd.step(rover_actions)
-        g_reward = sum(step_rewards) - 1 # -1 for taking a step.
-        # Assign the agents with thier local rewards.
-        for rv in rd.rovers:
-            # Using G(z) for local rewards and Q-value updates.
-            rd.rovers[rv].reward = g_reward 
-            # Call Update Qvalues
-            rd.rovers[rv].update_Qvalues()
-            print(step, rd.rovers[rv].reward)
+    ep = 0
+    while ep < p["n_eps"]:
+        rd.reset_world(0)
         
-        epsilon *= decay
-    
+        # Q-learning
+        # Take the step
+        # Get observations(s') and rewards r
+        # Update Q values for each agent according to action each took.
+        # decay epsilon
+        epsilon = p["epsilon_q"]
+        decay = p["epsilon_decay_factor"]
+        poi_rewards = np.zeros((p["n_poi"], p["steps"]))
+        step = 0
+        g_reward = 0.0
+        
+        while step < p["steps"] or rd.done:
+            if(step % 1000 == 0):
+                print("Episode #: %d \t Step #: %d"% (ep, step))
+                print("global_rewards: %f"% g_reward)
+                print("***********************************************")
+                
+            rover_actions = []
+            for rv in rd.rovers:
+                direction, angle = e_greedy(epsilon, rd.rovers[rv])
+                action_bracket = int(angle / rd.rovers[rv].sensor_res)
+                if action_bracket > rd.rovers[rv].n_brackets - 1:
+                        action_bracket -= n_brackets
+                rd.rovers[rv].action_quad = action_bracket
+                rover_actions.append(direction)
+                
+            step_rewards = rd.step(rover_actions)
+            g_reward = sum(step_rewards) - 1 # -1 for taking a step.
+            
+            # Assign the agents with thier local rewards.
+            for rv in rd.rovers:
+                # Using G(z) for local rewards and Q-value updates.
+                rd.rovers[rv].reward = g_reward
+                
+                # Call Update Qvalues
+                rd.rovers[rv].update_Qvalues()
+                # print(step, rd.rovers[rv].reward)
+            
+            epsilon *= decay
+            rd.done = rd.goals_done()
+            step += 1
+        ep += 1
 
 def e_greedy(epsilon, rv):
     if np.random.rand() < epsilon:

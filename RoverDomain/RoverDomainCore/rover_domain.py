@@ -15,13 +15,14 @@ class RoverDomain:
         self.n_rovers = p["n_rovers"]
         self.obs_radius = p["observation_radius"]  # Maximum distance rovers can make observations of POI at
         self.rover_poi_distances = [[] for i in range(self.n_pois)]  # Tracks rover distances to POI at each time step
-        self.global_rewards = []
+        self.global_rewards = [0.0 for _ in range(self.n_pois)]
         # Rover Instances
         self.rovers = {}  # Dictionary containing instances of rover objects
         self.rover_configurations = [[] for _ in range(p["n_rovers"])]
         # POI Instances
         self.pois = {}  # Dictionary containing instances of PoI objects
         self.poi_configurations = [[] for _ in range(p["n_poi"])]
+        self.done = False
 
     def reset_world(self, cf_id):
         """
@@ -32,7 +33,17 @@ class RoverDomain:
             self.rovers[rv].reset_rover(self.rover_configurations[self.rovers[rv].rover_id][cf_id])
         for poi in self.pois:
             self.pois[poi].reset_poi(self.poi_configurations[self.pois[poi].poi_id][cf_id])
+        self.global_rewards = [0.0 for _ in range(self.n_pois)]
+        self.done = False
 
+    def goals_done(self):
+        for poi in self.pois:
+            if self.pois[poi].done:
+                continue
+            else:
+                return False
+        return True
+    
     def load_world(self):
         """
         Load a rover domain from a saved csv file.
@@ -62,7 +73,16 @@ class RoverDomain:
             if observer_count >= int(self.pois[poi].coupling):
                 summed_dist = sum(rover_distances[0:int(self.pois[poi].coupling)])
                 global_reward[self.pois[poi].poi_id] = self.pois[poi].value / (summed_dist/self.pois[poi].coupling)
-
+                flag = True
+                for d in range(len(rover_distances)): 
+                    if (rover_distances[d] < 0.001):
+                        # Have reached the fire.
+                        continue
+                    else:
+                        # Atleast 1 has not reached fire.
+                        flag = False
+                self.pois[poi].done = flag
+                
         return global_reward
 
     def load_poi_configuration(self):

@@ -40,6 +40,9 @@ class Rover:
         self.loc[2] = rover_config[2]
         self.observations = np.zeros(self.n_inputs)
         self.prev_observations = self.observations.copy()
+        self.reward = 0.0
+        self.action_quad = 0
+        
     def scan_environment(self, rovers, pois):
         """
         Constructs the state information that gets passed to the rover's neuro-controller

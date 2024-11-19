@@ -12,6 +12,7 @@ class POI:
         self.observer_distances = np.zeros(p["n_rovers"])  # Keeps track of rover distances
         self.observed = False  # Boolean that indicates if a POI is successfully observed
         self.quadrant = None  # Tracks which quadrant (or sector) of the environment a POI exists in
+        self.done = False  # Boolean to indicate if poi is done harvesting.
 
     def reset_poi(self, poi_config):
         """
@@ -23,6 +24,7 @@ class POI:
         self.coupling = poi_config[3]
         self.observer_distances = np.zeros(p["n_rovers"])
         self.observed = False
+        self.done = False
 
     def update_observer_distances(self, rovers):
         """
