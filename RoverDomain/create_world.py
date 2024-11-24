@@ -293,7 +293,7 @@ def create_world_setup(coupling):
         elif p["poi_config_type"] == "Circle":
             pois_info = poi_pos_circle(coupling)
             poi_vals_random(pois_info, 3.0, 10.0)
-        elif p["poi_config_type"] == "Custom: Random position, same values"
+        elif p["poi_config_type"] == "Custom": # Random position, same values
             pois_info = poi_pos_random(coupling)
             poi_vals_identical(pois_info, 1000.0)
         else:
