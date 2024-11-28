@@ -3,20 +3,19 @@ parameters = {}
 # Test Parameters
 parameters["starting_srun"] = 0  # Which stat run should testing start on (used for parallel testing)
 parameters["stat_runs"] = 15  # Total number of runs to perform
-parameters["generations"] = 3000  # Number of generations for CCEA in each stat run
+parameters["generations"] = 300  # Number of generations for CCEA in each stat run
 parameters["algorithm"] = "Global"  # Global, Difference, DPP (D++)
 parameters["sample_rate"] = 20  # Spacing for collecting performance data during training (every X generations)
 parameters["n_configurations"] = 1  # The number of environmental configurations used for training
 
 # Domain parameters
-parameters["x_dim"] = 15.0  # Width of the rover map
-parameters["y_dim"] = 15.0  # Height of the rover map
-parameters["n_rovers"] = 1  # Number of rover agents on map
-parameters["n_poi"] = 2   # Number of POIs on map
-parameters["n_eps"] = 10  # Number of episodes
-parameters["steps"] = 100000  # Number of time steps rovers take each episode
+parameters["x_dim"] = 50.0  # Width of the rover map
+parameters["y_dim"] = 50.0  # Height of the rover map
+parameters["n_rovers"] = 4  # Number of rover agents on map
+parameters["n_poi"] = 4   # Number of POIs on map
+parameters["steps"] = 100  # Number of time steps rovers take each episode
 parameters["world_setup"] = "All"  # Rover_Only, All
-parameters["poi_config_type"] = "Custom"  # Random, Two_POI_LR, Twp_POI_TB, Four_Corners, Circle, Cusotm
+parameters["poi_config_type"] = "Random"  # Random, Two_POI_LR, Twp_POI_TB, Four_Corners, Circle
 parameters["rover_config_type"] = "Concentrated"  # Random, Concentrated, Fixed
 
 # Rover Parameters
@@ -26,8 +25,8 @@ parameters["observation_radius"] = 3.0  # Maximum range at which rovers can obse
 parameters["dmax"] = 1.5  # Maximum distance a rover can move in a single time step
 
 # Q-Learning Parameters
-parameters["epsilon_q"] = 0.1
-parameters["epsilon_decay_factor"] = 0.95
+parameters["epsilon_q"] = 0.9
+parameters["epsilon_decay_factor"] = 0.9999
 parameters["learning_rate"] = 0.1
 parameters["discount_factor"] = 0.95
 

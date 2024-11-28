@@ -15,14 +15,15 @@ class RoverDomain:
         self.n_rovers = p["n_rovers"]
         self.obs_radius = p["observation_radius"]  # Maximum distance rovers can make observations of POI at
         self.rover_poi_distances = [[] for i in range(self.n_pois)]  # Tracks rover distances to POI at each time step
-        self.global_rewards = [0.0 for _ in range(self.n_pois)]
+        self.rover_paths = {f'R{rv}': [] for rv in range(self.n_rovers)}
+
+        self.global_rewards = []
         # Rover Instances
         self.rovers = {}  # Dictionary containing instances of rover objects
         self.rover_configurations = [[] for _ in range(p["n_rovers"])]
         # POI Instances
         self.pois = {}  # Dictionary containing instances of PoI objects
         self.poi_configurations = [[] for _ in range(p["n_poi"])]
-        self.done = False
 
     def reset_world(self, cf_id):
         """
@@ -33,22 +34,17 @@ class RoverDomain:
             self.rovers[rv].reset_rover(self.rover_configurations[self.rovers[rv].rover_id][cf_id])
         for poi in self.pois:
             self.pois[poi].reset_poi(self.poi_configurations[self.pois[poi].poi_id][cf_id])
-        self.global_rewards = [0.0 for _ in range(self.n_pois)]
-        self.done = False
+        self.rover_paths = {f'R{rv}': [] for rv in range(self.n_rovers)}
 
-    def goals_done(self):
-        for poi in self.pois:
-            if self.pois[poi].done:
-                continue
-            else:
-                return False
-        return True
-    
+
+
     def load_world(self):
         """
         Load a rover domain from a saved csv file.
         """
         # Initialize POI positions and values
+
+
         self.load_poi_configuration()
 
         # Initialize Rover Positions
@@ -73,17 +69,46 @@ class RoverDomain:
             if observer_count >= int(self.pois[poi].coupling):
                 summed_dist = sum(rover_distances[0:int(self.pois[poi].coupling)])
                 global_reward[self.pois[poi].poi_id] = self.pois[poi].value / (summed_dist/self.pois[poi].coupling)
-                flag = True
-                for d in range(len(rover_distances)): 
-                    if (rover_distances[d] < 0.001):
-                        # Have reached the fire.
-                        continue
-                    else:
-                        # Atleast 1 has not reached fire.
-                        flag = False
-                self.pois[poi].done = flag
-                
+
         return global_reward
+    
+
+    def calc_difference(pois, global_reward, rov_poi_dist):
+        """
+        Calculate each rover's difference reward for the current episode.
+        """
+        difference_rewards = np.zeros(p["n_rovers"])
+        for agent_id in range(p["n_rovers"]):
+            counterfactual_global_reward = 0.0
+
+            for poi in pois:  # For each POI
+                poi_reward = 0.0
+                for step in range(p["steps"]):
+                    observer_count = 0
+                    rover_distances = copy.deepcopy(rov_poi_dist[pois[poi].poi_id][step])
+
+                    # Counterfactual: Remove agent i's contribution
+                    rover_distances[agent_id] = float('inf')
+                    sorted_distances = np.sort(rover_distances)
+
+                    # Check if the POI meets the observer requirement
+                    for i in range(int(pois[poi].coupling)):
+                        if sorted_distances[i] < p["observation_radius"]:
+                            observer_count += 1
+
+                    # Calculate reward for the given POI
+                    if observer_count >= pois[poi].coupling:
+                        summed_dist = sum(sorted_distances[0:int(pois[poi].coupling)])
+                        reward = pois[poi].value / (summed_dist / pois[poi].coupling)
+                        poi_reward = max(poi_reward, reward)
+
+                counterfactual_global_reward += poi_reward
+
+            # Difference Reward
+            difference_rewards[agent_id] = global_reward - counterfactual_global_reward
+
+        return difference_rewards
+
 
     def load_poi_configuration(self):
         """
@@ -164,6 +189,7 @@ class RoverDomain:
             # Update rover position
             self.rovers[rv].loc[0] = x
             self.rovers[rv].loc[1] = y
+            self.rover_paths[rv].append((x, y))
 
         # Rovers observe the new world state
         for rv in self.rovers:
