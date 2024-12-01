@@ -58,6 +58,9 @@ def rover_global():
             rd.done = rd.goals_done()
             step += 1
         ep += 1
+        if(ep == p["n_eps"]):
+            for rv in rd.rovers:
+                print(rd.rovers[rv].Qtable)
 
 def e_greedy(epsilon, rv):
     if np.random.rand() < epsilon:

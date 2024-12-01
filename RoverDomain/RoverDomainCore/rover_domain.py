@@ -36,8 +36,6 @@ class RoverDomain:
             self.pois[poi].reset_poi(self.poi_configurations[self.pois[poi].poi_id][cf_id])
         self.rover_paths = {f'R{rv}': [] for rv in range(self.n_rovers)}
 
-
-
     def load_world(self):
         """
         Load a rover domain from a saved csv file.
@@ -72,8 +70,7 @@ class RoverDomain:
 
         return global_reward
     
-
-    def calc_difference(pois, global_reward, rov_poi_dist):
+    def calc_difference(self, current_step, global_reward):
         """
         Calculate each rover's difference reward for the current episode.
         """
@@ -81,27 +78,27 @@ class RoverDomain:
         for agent_id in range(p["n_rovers"]):
             counterfactual_global_reward = 0.0
 
-            for poi in pois:  # For each POI
+            for poi in self.pois:  # For each POI
                 poi_reward = 0.0
-                for step in range(p["steps"]):
+                for step in range(current_step):
                     observer_count = 0
-                    rover_distances = copy.deepcopy(rov_poi_dist[pois[poi].poi_id][step])
+                    rover_distances = copy.deepcopy(self.rover_poi_distances[self.pois[poi].poi_id][step])
 
                     # Counterfactual: Remove agent i's contribution
-                    rover_distances[agent_id] = float('inf')
+                    rover_distances[agent_id] = 10000.0
                     sorted_distances = np.sort(rover_distances)
 
                     # Check if the POI meets the observer requirement
-                    for i in range(int(pois[poi].coupling)):
+                    for i in range(int(self.pois[poi].coupling)):
                         if sorted_distances[i] < p["observation_radius"]:
                             observer_count += 1
 
                     # Calculate reward for the given POI
-                    if observer_count >= pois[poi].coupling:
-                        summed_dist = sum(sorted_distances[0:int(pois[poi].coupling)])
-                        reward = pois[poi].value / (summed_dist / pois[poi].coupling)
+                    if observer_count >= self.pois[poi].coupling:
+                        summed_dist = sum(sorted_distances[0:int(self.pois[poi].coupling)])
+                        reward = self.pois[poi].value / (summed_dist / self.pois[poi].coupling)
                         poi_reward = max(poi_reward, reward)
-
+                        
                 counterfactual_global_reward += poi_reward
 
             # Difference Reward
