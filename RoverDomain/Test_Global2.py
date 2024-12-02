@@ -4,7 +4,8 @@ from parameters import parameters as p
 from global_functions import *
 from Visualizer.turtle_visualizer import run_rover_visualizer
 from Visualizer.visualizer import run_visualizer
-
+import pickle
+# from Visualizer.visualizer import run_visualizer
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -28,6 +29,7 @@ def visualize_last_episode_paths(rover_paths):
     plt.figure(figsize=(10, 10))
     for rover_id, path in rover_paths.items():
         path = np.array(path)  # Convert list of tuples to numpy array for easier plotting
+        print(np.size(path))
         plt.plot(path[:, 0], path[:, 1], marker='o', label=f'Rover {rover_id}')
     plt.xlabel('X Position')
     plt.ylabel('Y Position')
@@ -77,7 +79,6 @@ def rover_global():
 
             epsilon *= decay  # Decay exploration rate
 
-
         all_global_rewards.append(global_rewards_over_time)
 
         # Save paths from the final episode
@@ -85,11 +86,22 @@ def rover_global():
             final_paths = rd.rover_paths
 
         print(f"Episode {episode + 1}/{num_episodes} completed.")
+    print("Type of final_paths:", type(final_paths))
+    #print("Contents of final_paths:", final_paths)
+    n_rovers = len(final_paths)
+    rover_steps = len(final_paths[list(final_paths.keys())[0]])  # Length of trajectory for the first rover
+    final_paths_array = np.zeros((1, n_rovers, rover_steps, 2))  # Shape: [stat_runs, n_rovers, rover_steps, 2]
+
+    # Populate the array
+    for rover_idx, (rover_id, path) in enumerate(final_paths.items()):
+        final_paths_array[0, rover_idx, :, :] = np.array(path)
 
     # Plot rewards and paths for the last episode
     plot_rewards(all_global_rewards)
     visualize_last_episode_paths(final_paths)
 
+    with open('Output_Data/Rover_Paths0', 'wb') as f:
+        pickle.dump(final_paths_array, f)
 
 def plot_rewards(all_rewards):
     """
@@ -141,3 +153,7 @@ def e_greedy(epsilon, rover):
 if __name__ == "__main__":
     for _ in range(2):  # Run for multiple episodes
         rover_global()
+        run_visualizer(cf_id=0)  # Adjust cf_id as needed
+
+
+
